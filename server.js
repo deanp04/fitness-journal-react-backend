@@ -38,8 +38,6 @@ const workoutSchema = new mongoose.Schema({
 
 const Workout = mongoose.model('Workout', workoutSchema);
 
-// Updated API endpoints for workouts
-
 // Get all workouts
 app.get('/workouts', async (req, res) => {
   const workouts = await Workout.find();
@@ -56,13 +54,49 @@ app.get('/workouts/:id', async (req, res) => {
 app.post('/workouts', async (req, res) => {
   const newWorkout = new Workout(req.body);
   const savedWorkout = await newWorkout.save();
-  res.send(savedWorkout);
+  res.status(201).json(savedWorkout);
 });
 
 // Delete a workout by ID
 app.delete('/workouts/:id', async (req, res) => {
   await Workout.findByIdAndDelete(req.params.id);
   res.status(200).send('Workout deleted');
+});
+
+// Create an endpoint for adding exercises to a workout
+app.post('/workouts/:id/exercises', async (req, res) => {
+  try {
+    const workout = await Workout.findById(req.params.id);
+    if (!workout) {
+      return res.status(404).json({ error: 'Workout not found' });
+    }
+    const newExercise = req.body;
+    workout.exercises.push(newExercise);
+    const savedWorkout = await workout.save();
+    res.status(201).json(savedWorkout);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to add exercise' });
+  }
+});
+
+// Create an endpoint for adding sets to an exercise
+app.post('/workouts/:workoutId/exercises/:exerciseIndex/sets', async (req, res) => {
+  try {
+    const workout = await Workout.findById(req.params.workoutId);
+    if (!workout) {
+      return res.status(404).json({ error: 'Workout not found' });
+    }
+    const exerciseIndex = parseInt(req.params.exerciseIndex);
+    if (exerciseIndex < 0 || exerciseIndex >= workout.exercises.length) {
+      return res.status(400).json({ error: 'Invalid exercise index' });
+    }
+    const newSet = req.body;
+    workout.exercises[exerciseIndex].sets.push(newSet);
+    const savedWorkout = await workout.save();
+    res.status(201).json(savedWorkout);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to add set' });
+  }
 });
 
 app.listen(5000, () => console.log('Server started on port 5000'));
