@@ -12,14 +12,32 @@ mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log('Connected to DB!'))
     .catch(error => console.log(error.message));
 
-    const postSchema = new mongoose.Schema({
-      title: String,
-      author: String,
-      image: String,
-      content: String
-  });
-  
-  const Post = mongoose.model('Post', postSchema);
+    const workoutSchema = new mongoose.Schema({
+        date: {
+          type: Date,
+          required: true,
+        },
+        exercises: [{
+          name: {
+            type: String,
+            required: true,
+          },
+          sets: [{
+            weight: {
+              type: Number,
+              required: true,
+            },
+            reps: {
+              type: Number,
+              required: true,
+            },
+          }],
+        }],
+        feelings: String, // You can add more details about how the user felt
+      });
+      
+      const Workout = mongoose.model('Workout', workoutSchema);
+      
   
   app.get('/posts', async (req, res) => {
       const posts = await Post.find();
